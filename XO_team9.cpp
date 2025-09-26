@@ -31,8 +31,6 @@ public:
             winCondition = 4; // 4x4: need win is 4 in a row
         else if (s == 5)
             winCondition = 4; // 5x5: need win is 4 in a row
-        else
-            winCondition = 5; // 6x6 and larger: win is 5 in a row
 
         grid = vector<vector<char>>(size, vector<char>(size, ' '));
     }
@@ -294,7 +292,7 @@ private:
 
 public:
     // ": Player(n, sym)" makes a para. constructor for Player
-    AIPlayer(const string &n = "Sama7", char sym = 'A', int diff = 1) : Player(n, sym)
+    AIPlayer(const string &n, char sym, int diff) : Player(n, sym)
     {
         difficulty = diff;
     }
@@ -321,15 +319,15 @@ public:
             return 0; // draw
         }
 
-        // don't search too deep on bigger boards (performance)
+        // made maximum search depths for each grid size
         int maxDepth;
         int boardSize = board.getSize();
-        if (boardSize <= 3)
-            maxDepth = 9;
+        if (boardSize == 3)
+            maxDepth = 9; // best depth for 3x3
         else if (boardSize == 4)
-            maxDepth = 6;
-        else
-            maxDepth = 4;
+            maxDepth = 7; // balanced search for 4x4
+        else if (boardSize == 5)
+            maxDepth = 5; // good search for 5x5
 
         if (depth >= maxDepth)
         {
@@ -405,99 +403,191 @@ public:
             }
         }
 
-        // add positional bonuses for larger boards when score is low
-        if (boardSize > 3 && abs(score) < 5)
+        // some bonuses based on grid size for optimizing mini max
+        if (boardSize == 4)
         {
+            // 4x4 grid: center control is very important
             int center = boardSize / 2;
-            // count AI pieces in center area
-            for (int i = center - 1; i <= center + 1; i++)
+            for (int i = center - 1; i <= center; i++)
             {
-                for (int j = center - 1; j <= center + 1; j++)
+                for (int j = center - 1; j <= center; j++)
                 {
-                    if (i >= 0 && i < boardSize && j >= 0 && j < boardSize)
-                    {
-                        if (board.getCell(i, j) == aiSymbol)
-                            score += 3;
-                        else if (board.getCell(i, j) == humanSymbol)
-                            score -= 3;
-                    }
+                    if (board.getCell(i, j) == aiSymbol)
+                        score += 10; // Higher bonus for 4x4 center
+                    else if (board.getCell(i, j) == humanSymbol)
+                        score -= 10;
                 }
+            }
+
+            // corner bonuses for 4x4
+            int corners[4][2] = {{0, 0}, {0, 3}, {3, 0}, {3, 3}};
+            for (int k = 0; k < 4; k++)
+            {
+                if (board.getCell(corners[k][0], corners[k][1]) == aiSymbol)
+                    score += 6;
+                else if (board.getCell(corners[k][0], corners[k][1]) == humanSymbol)
+                    score -= 6;
+            }
+        }
+        else if (boardSize == 5)
+        {
+            // 5x5 grid: center and edges are better
+            int center = 2; // center of 5x5 is (2,2)
+            if (board.getCell(center, center) == aiSymbol)
+                score += 15; // bonus for exact center
+            else if (board.getCell(center, center) == humanSymbol)
+                score -= 15;
+
+            // next to center positions
+            int centerAdjacent[4][2] = {{1, 2}, {2, 1}, {2, 3}, {3, 2}};
+            for (int k = 0; k < 4; k++)
+            {
+                if (board.getCell(centerAdjacent[k][0], centerAdjacent[k][1]) == aiSymbol)
+                    score += 8;
+                else if (board.getCell(centerAdjacent[k][0], centerAdjacent[k][1]) == humanSymbol)
+                    score -= 8;
+            }
+
+            // Corner bonuses for 5x5
+            int corners[4][2] = {{0, 0}, {0, 4}, {4, 0}, {4, 4}};
+            for (int k = 0; k < 4; k++)
+            {
+                if (board.getCell(corners[k][0], corners[k][1]) == aiSymbol)
+                    score += 5;
+                else if (board.getCell(corners[k][0], corners[k][1]) == humanSymbol)
+                    score -= 5;
             }
         }
 
         return score;
     }
 
-    // see how good a line is for winning
+    // this function checks how good a specific line (row, column, or diagonal) is for winning
+    // it counts AI pieces, human pieces, and empty spaces in that line
     int evaluateLine(const Board &board, int startRow, int startCol, int deltaRow, int deltaCol,
                      char aiSymbol, char humanSymbol, int winCondition) const
     {
+        // count how many pieces each player has in this line
         int aiCount = 0, humanCount = 0, emptyCount = 0;
 
+        // go through each position in the line we're checking
+        // deltaRow and deltaCol determine the direction:
+        // for row: deltaRow=0, deltaCol=1 (horizontal →)
+        // for column: deltaRow=1, deltaCol=0 (vertical ↓)
+        // for diagonal: deltaRow=1, deltaCol=1 (diagonal ↘) or deltaRow=1, deltaCol=-1 (diagonal ↙)
         for (int i = 0; i < winCondition; i++)
         {
+            // calculate the actual position on the board
             int row = startRow + i * deltaRow;
             int col = startCol + i * deltaCol;
 
+            // make sure we're still inside the board boundaries
             if (row >= 0 && row < board.getSize() && col >= 0 && col < board.getSize())
             {
                 char cell = board.getCell(row, col);
                 if (cell == aiSymbol)
-                    aiCount++;
+                    aiCount++; // count ai pieces on this
                 else if (cell == humanSymbol)
-                    humanCount++;
+                    humanCount++; // count human pieces on this
                 else
-                    emptyCount++;
+                    emptyCount++; // count empty spaces
             }
         }
 
-        // if both players are in this line, nobody can win here
-        if (aiCount > 0 && humanCount > 0)
-            return 0;
-
-        // give points based on how close to winning
+        // score the line based on how many pieces each player has
+        // more pieces in a line = higher score (closer to winning)
         if (aiCount > 0)
         {
-            return (aiCount == winCondition - 1) ? 50 : aiCount * aiCount;
+            // improve scoring based on how close to winning (winCondition - 1 means one move from win)
+            if (aiCount == winCondition - 1)
+                return 100; // winning move
+            else
+                return aiCount * 10; // ai gets positive points: 1 piece = 10 pts, 2 pieces = 20 pts, etc.
         }
         else if (humanCount > 0)
         {
-            return (humanCount == winCondition - 1) ? -50 : -humanCount * humanCount;
+            // blocking is more important when opponent is close to winning
+            if (humanCount == winCondition - 1)
+                return -200; // must block
+            else
+                return -humanCount * 15; // human gets points (negative for AI) - we want to block
         }
 
-        return 0;
+        return 0; // Empty line has no strategic value
     }
 
     void getBestMove(const Board &board, int &row, int &col) const
     {
         char aiSymbol = symbol;
         char humanSymbol = (aiSymbol == 'X') ? 'O' : 'X';
-        int bestScore = -1000;
-        int bestRow = -1, bestCol = -1;
 
-        // for all possible moves
+        // psuedo code 1: try to win or check for win
         for (int i = 0; i < board.getSize(); i++)
         {
             for (int j = 0; j < board.getSize(); j++)
             {
                 if (board.isValidMove(i, j))
                 {
-                    Board tempBoard = board;            // create a move because we passed the board as const
-                    tempBoard.makeMove(i, j, aiSymbol);
+                    Board testBoard = board;
+                    testBoard.makeMove(i, j, aiSymbol);
+                    if (testBoard.checkWin(aiSymbol))
+                    {
+                        row = i;
+                        col = j;
+                        return; // win now
+                    }
+                }
+            }
+        }
 
-                    // Evaluate this move (AI just moved, so next turn is human's - minimize)
+        // psuedo code 2: block opponent from winning
+        for (int i = 0; i < board.getSize(); i++)
+        {
+            for (int j = 0; j < board.getSize(); j++)
+            {
+                if (board.isValidMove(i, j))
+                {
+                    Board testBoard = board;
+                    testBoard.makeMove(i, j, humanSymbol);
+                    if (testBoard.checkWin(humanSymbol))
+                    {
+                        row = i;
+                        col = j;
+                        return; // block opponent
+                    }
+                }
+            }
+        }
+
+        // psuedo code 3: use minimax for better strategy moves
+        int bestScore = -1000;
+        int bestRow = -1, bestCol = -1;
+        for (int i = 0; i < board.getSize(); i++)
+        {
+            for (int j = 0; j < board.getSize(); j++)
+            {
+                if (board.isValidMove(i, j))
+                {
+                    Board tempBoard = board;            // create a board because we passed the board as const
+                    tempBoard.makeMove(i, j, aiSymbol); // make the move on the board based on getmove() in AIPlayer
+
+                    // AI just moved, so next turn is human's that's why we pass false - minimize in minimax
                     int score = minimax(tempBoard, 0, false, aiSymbol, humanSymbol);
 
-                    // add some positional bonus for center and strategic positions
-                    if (board.getSize() > 3)
+                    // bonuses based on grid size
+                    if (board.getSize() == 4)
                     {
-                        int center = board.getSize() / 2;
-                        // bonus for center positions
-                        if (abs(i - center) <= 1 && abs(j - center) <= 1)
-                            score += 2;
-                        // small bonus for corners on larger boards
-                        if ((i == 0 || i == board.getSize() - 1) && (j == 0 || j == board.getSize() - 1))
-                            score += 1;
+                        // 4x4: Prefer center 2x2 area
+                        if ((i >= 1 && i <= 2) && (j >= 1 && j <= 2))
+                            score += 3;
+                    }
+                    else if (board.getSize() == 5)
+                    {
+                        // 5x5: Prefer center position most, then next to center
+                        if (i == 2 && j == 2)
+                            score += 5; // center
+                        else if (abs(i - 2) <= 1 && abs(j - 2) <= 1)
+                            score += 2; // next to center
                     }
 
                     if (score > bestScore)
@@ -510,7 +600,7 @@ public:
             }
         }
 
-        // Handle edge case where no valid moves found
+        // no moves found
         if (bestRow == -1 || bestCol == -1)
         {
             getRandomMove(board, row, col);
@@ -671,6 +761,7 @@ public:
         bool exit = false;
         int player1Counter = 0, player2Counter = 0;
         Player *current;
+        bool restart = false;
         while (!exit)
         {
 
@@ -722,9 +813,11 @@ public:
             if (endChoice == 2)
             {
                 exit = true;
+                restart = false;
             }
             else if (endChoice == 1)
             {
+                restart = true;
                 myBoard->reset();
                 if (dynamic_cast<AIPlayer *>(player2) != nullptr) // checks if current player is ai or not
                 {
@@ -752,8 +845,11 @@ public:
                 }
             }
         }
-        myBoard->reset();
-        showMenu();
+        if (!restart)
+        {
+            myBoard->reset();
+            showMenu();
+        }
     }
     void setupPVP()
     {
@@ -841,16 +937,21 @@ public:
         bool selectingSize = true;
         while (selectingSize)
         {
-            cout << "What is the size of the grid? (3-10): ";
+            cout << "Choose grid size:" << endl;
+            cout << "3. 3x3 grid (classic)" << endl;
+            cout << "4. 4x4 grid (intermediate) (need 4 symbols to win)" << endl;
+            cout << "5. 5x5 grid (advanced) (need 4 symbols to win)" << endl;
+            cout << "Enter your choice (3, 4, or 5): ";
             cin >> size;
-            if (size < 3 || size > 10)
-            {
-                cout << "Invalid size! Please enter a size between 3 and 10." << endl;
-            }
-            else
+            if (size == 3 || size == 4 || size == 5)
             {
                 selectingSize = false;
                 myBoard->makeBoard(size);
+                cout << "Grid size set to " << size << "x" << size << "!" << endl;
+            }
+            else
+            {
+                cout << "Invalid choice! Please enter 3, 4, or 5 only." << endl;
             }
         }
         showMenu();
