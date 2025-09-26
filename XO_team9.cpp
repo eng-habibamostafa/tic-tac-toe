@@ -437,17 +437,8 @@ private:
 public:
     Game()
     {
-        /*
-        int size;
-        cout << "What is the size of your grid?" << endl;
-        cin >> size;
-        cout << "Player 1 name: " << endl;
-        cout << "Player 1 name: " << endl;
-
-        لسة مش عارف هنعمل فيها ايه بس دي ك بداية
-        */
-        myBoard = new Board(); // Allocate memory first!
-        myBoard->makeBoard(3); // Then initialize with size 3
+        myBoard = new Board();
+        myBoard->makeBoard(3);
         player1 = nullptr;
         player2 = nullptr;
         currentPlayer = 1;
@@ -473,13 +464,8 @@ public:
         }
         else if (choice == 2)
         {
-            int choice;
-            cout << "Choose your difficulty!" << endl
-                 << "1. Easy" << endl
-                 << "2. Medium" << endl
-                 << "3. Hard" << endl;
-            cin >> choice;
-            setupPVC(choice);
+            int difficulty;
+            setupPVC(difficulty);
         }
 
         startGame();
