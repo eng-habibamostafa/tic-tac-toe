@@ -70,6 +70,8 @@ public:
     bool makeMove(int row, int col, char symbol)
     {
         // makes a move
+        row--;
+        col--;
         if (isValidMove(row, col))
         {
             grid[row][col] = symbol;
@@ -276,11 +278,21 @@ public:
 
     void getMove(const Board &myBoard, int &row, int &col) override
     {
-        cout << "Enter your row (0-" << myBoard.getSize() - 1 << "): ";
-        cin >> row;
-        cout << "Enter your column (0-" << myBoard.getSize() - 1 << "): ";
-        cin >> col;
-        cout << endl;
+        bool selectingIndex = true;
+        while (selectingIndex)
+        {
+            cout << "Enter your row (1-" << myBoard.getSize() << "): ";
+            cin >> row;
+            cout << "Enter your column (1-" << myBoard.getSize() << "): ";
+            cin >> col;
+            cout << endl;
+            if (row < 1 || row > myBoard.getSize() || col < 1 || col > myBoard.getSize())
+            {
+                cout << "Invalid row or column!" << endl;
+            }
+            else
+                selectingIndex = false;
+        }
     }
     void setDifficulty(int newDifficulty) override {}
 };
@@ -800,7 +812,7 @@ public:
                 }
                 else
                 {
-                    cout << "Invalid move." << endl;
+                    cout << "Invalid Cell!" << endl;
                 }
             }
             int endChoice;
