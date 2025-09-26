@@ -405,6 +405,26 @@ public:
             }
         }
 
+        // add positional bonuses for larger boards when score is low
+        if (boardSize > 3 && abs(score) < 5)
+        {
+            int center = boardSize / 2;
+            // count AI pieces in center area
+            for (int i = center - 1; i <= center + 1; i++)
+            {
+                for (int j = center - 1; j <= center + 1; j++)
+                {
+                    if (i >= 0 && i < boardSize && j >= 0 && j < boardSize)
+                    {
+                        if (board.getCell(i, j) == aiSymbol)
+                            score += 3;
+                        else if (board.getCell(i, j) == humanSymbol)
+                            score -= 3;
+                    }
+                }
+            }
+        }
+
         return score;
     }
 
@@ -455,18 +475,30 @@ public:
         int bestScore = -1000;
         int bestRow = -1, bestCol = -1;
 
-        // Try all possible moves
+        // for all possible moves
         for (int i = 0; i < board.getSize(); i++)
         {
             for (int j = 0; j < board.getSize(); j++)
             {
                 if (board.isValidMove(i, j))
                 {
-                    Board tempBoard = board;            // Create copy of the board
-                    tempBoard.makeMove(i, j, aiSymbol); // Make the move
+                    Board tempBoard = board;            // create a move because we passed the board as const
+                    tempBoard.makeMove(i, j, aiSymbol); // make the move
 
                     // Evaluate this move (AI just moved, so next turn is human's - minimize)
                     int score = minimax(tempBoard, 0, false, aiSymbol, humanSymbol);
+
+                    // add some positional bonus for center and strategic positions
+                    if (board.getSize() > 3)
+                    {
+                        int center = board.getSize() / 2;
+                        // bonus for center positions
+                        if (abs(i - center) <= 1 && abs(j - center) <= 1)
+                            score += 2;
+                        // small bonus for corners on larger boards
+                        if ((i == 0 || i == board.getSize() - 1) && (j == 0 || j == board.getSize() - 1))
+                            score += 1;
+                    }
 
                     if (score > bestScore)
                     {
