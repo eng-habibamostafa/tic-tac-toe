@@ -1,4 +1,4 @@
-#include <iostream>
+   #include <iostream>
 #include <vector>
 #include <string>
 #include <map>
@@ -66,6 +66,16 @@ public:
     bool isValidMove(int row, int col) const
     {
         // checks if this is a valid spot to put a X or O
+        if(row<0 || row>=size || col<0|| col>=size)
+        {
+            return false;
+        }
+        if(grid[row][col]!=' ')
+        { 
+            return false;
+        }
+
+    
         return true;
     }
 
@@ -73,8 +83,65 @@ public:
     {
         // checks the win conditions (rows, columns , diagonals)
 
-        // Check rows
+        
+       
+    // Check rows
+    for (int i = 0; i < size; i++)
+    {
+        bool rowWin = true;
+        for (int j = 0; j < size; j++)
+        {
+            if (grid[i][j] != symbol)
+            {
+                rowWin = false;
+                break;
+            }
+        }
+        if (rowWin) return true;
     }
+
+    // Check columns
+    for (int j = 0; j < size; j++)
+    {
+        bool colWin = true;
+        for (int i = 0; i < size; i++)
+        {
+            if (grid[i][j] != symbol)
+            {
+                colWin = false;
+                break;
+            }
+        }
+        if (colWin) return true;
+    }
+
+    // Check main diagonal
+    bool mainDiag = true;
+    for (int i = 0; i < size; i++)
+    {
+        if (grid[i][i] != symbol)
+        {
+            mainDiag = false;
+            break;
+        }
+    }
+    if (mainDiag) return true;
+
+    // Check anti-diagonal
+    bool antiDiag = true;
+    for (int i = 0; i < size; i++)
+    {
+        if (grid[i][size - i - 1] != symbol)
+        {
+            antiDiag = false;
+            break;
+        }
+    }
+    if (antiDiag) return true;
+
+    return false; // no win
+}
+    
 
     bool isFull() const
     {
@@ -90,6 +157,17 @@ public:
     void reset()
     {
         // clears all cells to empty state
+       
+
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++)
+        {
+            grid[i][j] = ' ';
+        }
+    }
+    
+
     }
     int getSize() const
     {
