@@ -81,8 +81,6 @@ public:
     bool checkWin(char symbol) const
     {
         // checks the win conditions (rows, columns , diagonals)
-
-        // Check rows
         for (int i = 0; i < size; i++)
         {
             bool rowWin = true;
@@ -142,7 +140,6 @@ public:
 
         return false; // no win
     }
-
     bool isFull() const
     {
         // indicating board full status
@@ -213,6 +210,20 @@ public:
         name = n;
         cout << "Name changed successfully!" << endl;
     }
+};
+
+class HumanPlayer : public Player{
+private:
+    string name;
+    char symbol;
+
+public:
+    HumanPlayer(const string &n, char s) : Player(n, s){
+        name = n;
+        symbol = s;
+    }
+
+    void getMove(const Board &myBoard, int &row, int &col) override {}
 };
 
 class AIPlayer : public Player
@@ -445,19 +456,7 @@ public:
         cout << "4. Player vs Computer (Hard)" << endl;
         cout << "Choose a mode: ";
         cin >> choice;
-
-        if (choice == 1)
-        {
-            setupPVP();
-        }
-        else if (choice >= 2 && choice <= 4)
-        {
-            setupPVC(choice - 1);
-        }
-
-        startGame();
-    }
-
+      
     void startGame()
     {
         bool gameOver = false;
@@ -496,11 +495,28 @@ public:
     void setupPVP()
     {
         // configures player vs player mode with user input
+        string name1;
+        cout << "Enter Player 1 Name: " << endl;
+        getline(cin, name1);
+        player1 = new HumanPlayer(name1, 'X');
+
+        string name2;
+        cout << "Enter Player 2 Name: " << endl;
+        getline(cin, name2);
+        player2 = new HumanPlayer(name2, 'O');   
     }
+
     void setupPVC(int difficulty)
     {
         // configures player vs computer mode with user input
+        string name1;
+        cout << "Enter Player 1 Name: " << endl;
+        getline(cin, name1);
+        player1 = new HumanPlayer(name1, 'X');
+
+        player2 = new AIPlayer("Intelligence", 'O', difficulty);
     }
+
     void switchPlayer()
     {
         // alternates current player between players
