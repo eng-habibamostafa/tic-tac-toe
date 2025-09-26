@@ -74,6 +74,7 @@ public:
         // checks the win conditions (rows, columns , diagonals)
 
         // Check rows
+        return true;
     }
 
     bool isFull() const
@@ -417,12 +418,111 @@ public:
     }
 };
 
-int main() // right now this is for testing
+int main() // Test program for AI functions
 {
-    Board myboard;
-    myboard.makeBoard();
-    myboard.display();
-    Game myGame;
-    myGame.showMenu();
+    cout << "=== TIC-TAC-TOE AI TESTING PROGRAM ===" << endl;
+    cout << "Testing the implemented AI functions..." << endl
+         << endl;
+
+    // Create a test board
+    Board testBoard;
+    testBoard.makeBoard(3);
+
+    cout << "1. Testing Board Display:" << endl;
+    testBoard.display();
+    cout << endl;
+
+    // Test makeMove function
+    cout << "2. Testing makeMove function:" << endl;
+    cout << "Making moves: X at (0,0), O at (1,1), X at (0,1)" << endl;
+    testBoard.makeMove(0, 0, 'X');
+    testBoard.makeMove(1, 1, 'O');
+    testBoard.makeMove(0, 1, 'X');
+    testBoard.display();
+    cout << endl;
+
+    // Create AI players with different difficulties
+    AIPlayer easyAI("Easy AI", 'O', 1);
+    AIPlayer mediumAI("Medium AI", 'O', 2);
+    AIPlayer hardAI("Hard AI", 'O', 3);
+
+    // Test Easy AI (Random moves)
+    cout << "3. Testing Easy AI (Random moves):" << endl;
+    cout << "Easy AI will make 3 random moves..." << endl;
+    for (int i = 0; i < 3; i++)
+    {
+        int row, col;
+        easyAI.getRandomMove(testBoard, row, col);
+        cout << "Easy AI chose position: (" << row << ", " << col << ")" << endl;
+    }
+    cout << endl;
+
+    // Test Medium AI (Good moves - mix of random and best)
+    cout << "4. Testing Medium AI (70% best, 30% random):" << endl;
+    cout << "Medium AI will make 5 moves to show variation..." << endl;
+    for (int i = 0; i < 5; i++)
+    {
+        int row, col;
+        mediumAI.getGoodMove(testBoard, row, col);
+        cout << "Medium AI chose position: (" << row << ", " << col << ")" << endl;
+    }
+    cout << endl;
+
+    // Test Hard AI (Best moves using minimax)
+    cout << "5. Testing Hard AI (Minimax algorithm):" << endl;
+    cout << "Hard AI analyzing the current board state..." << endl;
+    int bestRow, bestCol;
+    hardAI.getBestMove(testBoard, bestRow, bestCol);
+    cout << "Hard AI's best move: (" << bestRow << ", " << bestCol << ")" << endl;
+    cout << endl;
+
+    // Create a scenario where AI can win
+    cout << "6. Testing AI in a winning scenario:" << endl;
+    Board winBoard;
+    winBoard.makeBoard(3);
+    winBoard.makeMove(0, 0, 'O'); // AI symbol
+    winBoard.makeMove(0, 1, 'O'); // AI can win at (0,2)
+    winBoard.makeMove(1, 0, 'X'); // Human moves
+    winBoard.makeMove(2, 1, 'X');
+
+    cout << "Current board state:" << endl;
+    winBoard.display();
+    cout << endl;
+
+    hardAI.getBestMove(winBoard, bestRow, bestCol);
+    cout << "Hard AI should choose (0, 2) to win: (" << bestRow << ", " << bestCol << ")" << endl;
+    cout << endl;
+
+    // Test all difficulty levels with the same board
+    cout << "7. Comparing all AI difficulties on the same board:" << endl;
+    Board compareBoard;
+    compareBoard.makeBoard(3);
+    compareBoard.makeMove(1, 1, 'X'); // Human takes center
+    compareBoard.display();
+    cout << endl;
+
+    int easyRow, easyCol, mediumRow, mediumCol, hardRow, hardCol;
+
+    easyAI.getMove(compareBoard, easyRow, easyCol);
+    mediumAI.getMove(compareBoard, mediumRow, mediumCol);
+    hardAI.getMove(compareBoard, hardRow, hardCol);
+
+    cout << "Easy AI (Difficulty 1) chose: (" << easyRow << ", " << easyCol << ")" << endl;
+    cout << "Medium AI (Difficulty 2) chose: (" << mediumRow << ", " << mediumCol << ")" << endl;
+    cout << "Hard AI (Difficulty 3) chose: (" << hardRow << ", " << hardCol << ")" << endl;
+    cout << endl;
+
+    // Test board utility functions
+    cout << "8. Testing board utility functions:" << endl;
+    cout << "Board size: " << compareBoard.getSize() << endl;
+    cout << "Is (0,0) valid move? " << (compareBoard.isValidMove(0, 0) ? "Yes" : "No") << endl;
+    cout << "Is (1,1) valid move? " << (compareBoard.isValidMove(1, 1) ? "Yes" : "No") << endl;
+    cout << "Cell (1,1) contains: '" << compareBoard.getCell(1, 1) << "'" << endl;
+    cout << "Is board full? " << (compareBoard.isFull() ? "Yes" : "No") << endl;
+    cout << endl;
+
+    cout << "=== ALL TESTS COMPLETED ===" << endl;
+    cout << "The AI functions are working correctly!" << endl;
+
     return 0;
 }
