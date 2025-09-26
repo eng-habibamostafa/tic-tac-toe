@@ -483,7 +483,7 @@ public:
                 if (board.isValidMove(i, j))
                 {
                     Board tempBoard = board;            // create a move because we passed the board as const
-                    tempBoard.makeMove(i, j, aiSymbol); // make the move
+                    tempBoard.makeMove(i, j, aiSymbol);
 
                     // Evaluate this move (AI just moved, so next turn is human's - minimize)
                     int score = minimax(tempBoard, 0, false, aiSymbol, humanSymbol);
