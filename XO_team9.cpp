@@ -5,6 +5,7 @@
 #include <set>
 #include <cstdlib>
 #include <ctime>
+#include <algorithm>
 using namespace std;
 
 class Board
@@ -195,10 +196,10 @@ public:
         symbol = s;
     }
 
-    virtual void getMove(const Board &myBoard, int &row, int &col) = 0;
     // this will be overriden in the next classes for
     // human player
     // ai player for each one we will use a different getMove function
+    virtual void getMove(const Board &myBoard, int &row, int &col) = 0;
 
     string getName() const
     {
@@ -218,8 +219,6 @@ public:
 class AIPlayer : public Player
 {
 private:
-    string name;
-    char symbol;
     int difficulty;
 
 public:
@@ -235,7 +234,7 @@ public:
     }
 
     // minimax algorithm
-    int minimax(Board board, int depth, bool isMaximizing, char aiSymbol, char humanSymbol) const
+    int minimax(Board &board, int depth, bool isMaximizing, char aiSymbol, char humanSymbol) const
     {
         // base cases
         if (board.checkWin(aiSymbol)) // play the best move to win
@@ -254,7 +253,7 @@ public:
         int boardSize = board.getSize();
         if (isMaximizing) // the ai wants to win
         {
-            int bestScore = -10000;
+            int bestScore = -1000;
             for (int i = 0; i < boardSize; i++)
             {
                 for (int j = 0; j < boardSize; j++)
@@ -273,7 +272,7 @@ public:
             }
             return bestScore;
         }
-        else // it's the human player first , we should minimize the score
+        else // it's the human player's turn, we should minimize the score
         {
             int bestScore = 1000;
             for (int i = 0; i < boardSize; i++)
@@ -282,12 +281,12 @@ public:
                 {
                     if (board.isValidMove(i, j))
                     {
-                        board.makeMove(i, j, aiSymbol);                                     // puts a symbol in a place
-                        int score = minimax(board, depth + 1, true, aiSymbol, humanSymbol); // it's the ai's turn
+                        board.makeMove(i, j, humanSymbol);                                  // puts HUMAN symbol in place
+                        int score = minimax(board, depth + 1, true, aiSymbol, humanSymbol); // it's the ai's turn next
                         //                                    |-> this is why isMaximizing is passed as true
 
                         // compares between if we put the symbol and if we don't
-                        bestScore = min(bestScore, score); // gets the maximium score
+                        bestScore = min(bestScore, score); // gets the minimum score
                         board.makeMove(i, j, ' ');         // deletes the symbol for next iteration
                     }
                 }
@@ -312,13 +311,25 @@ public:
             }
         }
 
-        srand(time(0));                                  // generate random seed
-        int randomPosition = rand() % validMoves.size(); // generate random index for valid moves
-
-        if (!validMoves.empty())
+        // check if there are valid moves FIRST
+        if (!validMoves.empty()) // because we can't divide by zero
         {
-            row = validMoves[randomPosition].first;  // selects the index and gets row (first)
-            col = validMoves[randomPosition].second; // selects the index and gets col (second)
+            static bool seeded = false; // using singleton to seed only once
+            if (!seeded)
+            {
+                srand(time(0));
+                seeded = true;
+            }
+
+            int randomPosition = rand() % validMoves.size(); // safe size() is bigger than 0
+            row = validMoves[randomPosition].first;          // selects the index and gets row (first)
+            col = validMoves[randomPosition].second;         // selects the index and gets col (second)
+        }
+        else
+        {
+            // fallback
+            row = -1;
+            col = -1;
         }
     }
 
@@ -361,16 +372,22 @@ public:
     {
         // sometimes plays best moves and sometimes plays random moves for medium difficulty
 
-        // generate random number to decide between best move or random move
-        srand(time(0));
+        // use static seeding and singleton like in getRandomMove
+        static bool seeded = false;
+        if (!seeded)
+        {
+            srand(time(0));
+            seeded = true;
+        }
+
         int choice = rand() % 100; // generates a number from 0-99
 
-        // 30% chance to play best move
-        if (choice >= 30)
+        // 70% chance to play best move (0-69) - challenging but not impossible
+        if (choice < 70)
         {
             getBestMove(board, row, col);
         }
-        // 70% chance to play random move
+        // 30% chance to play random move (70-99) - gives human opportunities
         else
         {
             getRandomMove(board, row, col);
@@ -435,24 +452,34 @@ public:
         player2 = nullptr;
         currentPlayer = 1;
     }
+    /*
+    Game(Player *player1 , Player *player2 , Board& myboard)
+    {
+
+    }
+    */
     void showMenu()
     {
         int choice;
-        cout << "===== Tic Tac Toe =====" << endl;
-        cout << "1. Player vs Player" << endl;
-        cout << "2. Player vs Computer (Easy)" << endl;
-        cout << "3. Player vs Computer (Medium)" << endl;
-        cout << "4. Player vs Computer (Hard)" << endl;
-        cout << "Choose a mode: ";
+        cout << "===== Tic Tac Toe =====" << endl
+             << "1. Player vs Player" << endl
+             << "2. Player vs Computer" << endl
+             << "Choose a mode: ";
         cin >> choice;
 
         if (choice == 1)
         {
             setupPVP();
         }
-        else if (choice >= 2 && choice <= 4)
+        else if (choice == 2)
         {
-            setupPVC(choice - 1);
+            int choice;
+            cout << "Choose your difficulty!" << endl
+                 << "1. Easy" << endl
+                 << "2. Medium" << endl
+                 << "3. Hard" << endl;
+            cin >> choice;
+            setupPVC(choice);
         }
 
         startGame();
@@ -563,7 +590,7 @@ public:
     }
 };
 
-int main() // Test program for AI functions
+int testing() // Test program for AI functions
 {
     cout << "=== TIC-TAC-TOE AI TESTING PROGRAM ===" << endl;
     cout << "Testing the implemented AI functions..." << endl
@@ -594,10 +621,10 @@ int main() // Test program for AI functions
     // Test Easy AI (Random moves)
     cout << "3. Testing Easy AI (Random moves):" << endl;
     cout << "Easy AI will make 3 random moves..." << endl;
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 10; i++)
     {
         int row, col;
-        easyAI.getRandomMove(testBoard, row, col);
+        easyAI.getMove(testBoard, row, col);
         cout << "Easy AI chose position: (" << row << ", " << col << ")" << endl;
     }
     cout << endl;
@@ -608,7 +635,7 @@ int main() // Test program for AI functions
     for (int i = 0; i < 5; i++)
     {
         int row, col;
-        mediumAI.getGoodMove(testBoard, row, col);
+        mediumAI.getMove(testBoard, row, col);
         cout << "Medium AI chose position: (" << row << ", " << col << ")" << endl;
     }
     cout << endl;
@@ -669,5 +696,12 @@ int main() // Test program for AI functions
     cout << "=== ALL TESTS COMPLETED ===" << endl;
     cout << "The AI functions are working correctly!" << endl;
 
+    return 0;
+}
+int main()
+{
+
+    Board testBoard;
+    testBoard.makeBoard(3);
     return 0;
 }
