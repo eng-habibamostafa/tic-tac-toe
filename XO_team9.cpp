@@ -1,4 +1,4 @@
-#include <iostream>
+   #include <iostream>
 #include <vector>
 #include <string>
 #include <map>
@@ -66,6 +66,16 @@ public:
     bool isValidMove(int row, int col) const
     {
         // checks if this is a valid spot to put a X or O
+        if(row<0 || row>=size || col<0|| col>=size)
+        {
+            return false;
+        }
+        if(grid[row][col]!=' ')
+        { 
+            return false;
+        }
+
+    
         return true;
     }
 
@@ -74,7 +84,6 @@ public:
         // checks the win conditions (rows, columns , diagonals)
 
         // Check rows
-        return true;
     }
 
     bool isFull() const
@@ -91,6 +100,17 @@ public:
     void reset()
     {
         // clears all cells to empty state
+       
+
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++)
+        {
+            grid[i][j] = ' ';
+        }
+    }
+    
+
     }
     int getSize() const
     {
@@ -351,16 +371,64 @@ public:
         player2 = nullptr;
         currentPlayer = 1;
     }
-    void showMenu()
+   void showMenu()
+{
+    int choice;
+    cout << "===== Tic Tac Toe =====" << endl;
+    cout << "1. Player vs Player" << endl;
+    cout << "2. Player vs Computer (Easy)" << endl;
+    cout << "3. Player vs Computer (Medium)" << endl;
+    cout << "4. Player vs Computer (Hard)" << endl;
+    cout << "Choose a mode: ";
+    cin >> choice;
+
+    if (choice == 1)
     {
-        // displayes mode selection menu and handles user choices
+        setupPVP();
     }
+    else if (choice >= 2 && choice <= 4)
+    {
+        setupPVC(choice - 1);
+    }
+
+    startGame();
+}
+
 
     void startGame()
     {
-        // Main game entry point
-        /* cout << "Player" << currentPlayer << " start!";
-        maybe */
+    bool gameOver = false;
+    myBoard->display();
+
+    while (!gameOver)
+    {
+        Player* current = (currentPlayer == 1 ? player1 : player2);
+        int row, col;
+
+        current->getMove(*myBoard, row, col);
+        if (myBoard->makeMove(row, col, current->getSymbol()))
+        {
+            myBoard->display();
+            if (myBoard->checkWin(current->getSymbol()))
+            {
+                cout << current->getName() << " wins!" << endl;
+                gameOver = true;
+            }
+            else if (myBoard->isFull())
+            {
+                cout << "It's a draw!" << endl;
+                gameOver = true;
+            }
+            else
+            {
+                switchPlayer();
+            }
+        }
+        else
+        {
+            cout << "Invalid move." << endl;
+        }
+    }
     }
     void setupPVP()
     {
@@ -401,11 +469,22 @@ public:
         return false;
     }
 
-    void displayResult() const
+   void displayResult() const
+{
+    if (myBoard->checkWin(player1->getSymbol()))
     {
-        // shows game outcome message
-        // Player1 Wins!
+        cout << player1->getName() << " wins!" << endl;
     }
+    else if (myBoard->checkWin(player2->getSymbol()))
+    {
+        cout << player2->getName() << " wins!" << endl;
+    }
+    else if (myBoard->isFull())
+    {
+        cout << "It's a draw!" << endl;
+    }
+}
+
     void reset()
     {
         // prepares game for new round
