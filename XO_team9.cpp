@@ -69,9 +69,7 @@ public:
 
     bool makeMove(int row, int col, char symbol)
     {
-        // makes a move
-        row--;
-        col--;
+        // makes a move (expects 0-indexed coordinates)
         if (isValidMove(row, col))
         {
             grid[row][col] = symbol;
@@ -281,10 +279,26 @@ public:
         bool selectingIndex = true;
         while (selectingIndex)
         {
-            cout << "Enter your row (1-" << myBoard.getSize() << "): ";
+            cout << "Enter your row (1-" << myBoard.getSize() << ") or -1 to quit: ";
             cin >> row;
-            cout << "Enter your column (1-" << myBoard.getSize() << "): ";
+
+            // Check for quit command
+            if (row == -1)
+            {
+                col = -1; // Set both to -1 to indicate quit
+                return;
+            }
+
+            cout << "Enter your column (1-" << myBoard.getSize() << ") or -1 to quit: ";
             cin >> col;
+
+            // Check for quit command in column input too
+            if (col == -1)
+            {
+                row = -1; // Set both to -1 to indicate quit
+                return;
+            }
+
             cout << endl;
             if (row < 1 || row > myBoard.getSize() || col < 1 || col > myBoard.getSize())
             {
@@ -769,6 +783,7 @@ public:
 
     void startGame()
     {
+
         bool gameOver = false;
         bool exit = false;
         int player1Counter = 0, player2Counter = 0;
@@ -776,7 +791,6 @@ public:
         bool restart = false;
         while (!exit)
         {
-
             myBoard->display();
             while (!gameOver)
             {
@@ -784,6 +798,25 @@ public:
                 int row, col;
 
                 current->getMove(*myBoard, row, col);
+
+                // check if human player wants to quit
+                if (row == -1 && col == -1) // if human player entered -1
+                {
+                    cout << "\nGame ended by player " << current->getName() << ". Returning to main menu...\n"
+                         << endl;
+                    gameOver = true;
+                    exit = true;
+                    restart = false;
+                    break;
+                }
+
+                if (dynamic_cast<HumanPlayer *>(current) != nullptr) // if human player
+                {
+                    row--; // make input 1-indexed
+                    col--;
+                }
+                // AI players use 0-indexed
+
                 if (myBoard->makeMove(row, col, current->getSymbol()))
                 {
                     if (dynamic_cast<AIPlayer *>(current) != nullptr) // checks if current player is ai or not
@@ -830,14 +863,16 @@ public:
             else if (endChoice == 1)
             {
                 restart = true;
+                gameOver = false;
                 myBoard->reset();
                 if (dynamic_cast<AIPlayer *>(player2) != nullptr) // checks if current player is ai or not
                 {
                     int choice;
-                    cout << "1. Change the difficulty" << endl
-                         << "2. Continue" << endl;
+                    cout << "---------- Settings ----------" << endl
+                         << "1. Continue" << endl
+                         << "2. Change the difficulty" << endl;
                     cin >> choice;
-                    if (choice == 1)
+                    if (choice == 2)
                     {
                         int newDifficulty;
                         cout << "------ Playing another game ------" << endl
@@ -852,7 +887,6 @@ public:
                         {
                             player2->setDifficulty(newDifficulty);
                         }
-                        gameOver = false;
                     }
                 }
             }
