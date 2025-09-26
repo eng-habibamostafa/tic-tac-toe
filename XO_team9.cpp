@@ -482,8 +482,6 @@ public:
         startGame();
     }
 
-      
- main
     void startGame()
     {
         bool gameOver = false;
