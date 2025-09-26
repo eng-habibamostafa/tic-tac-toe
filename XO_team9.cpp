@@ -3,6 +3,8 @@
 #include <string>
 #include <map>
 #include <set>
+#include <cstdlib>
+#include <ctime>
 using namespace std;
 
 class Board
@@ -53,7 +55,12 @@ public:
     bool makeMove(int row, int col, char symbol)
     {
         // makes a move
-        return true;
+        if (isValidMove(row, col))
+        {
+            grid[row][col] = symbol;
+            return true;
+        }
+        return false;
     }
 
     bool isValidMove(int row, int col) const
@@ -65,7 +72,8 @@ public:
     bool checkWin(char symbol) const
     {
         // checks the win conditions (rows, columns , diagonals)
-        return false;
+
+        // Check rows
     }
 
     bool isFull() const
@@ -83,7 +91,7 @@ public:
     {
         // clears all cells to empty state
     }
-    int getSize()
+    int getSize() const
     {
         // getter for grid size
         return size;
@@ -140,25 +148,153 @@ public:
     }
     void setDifficulty(int newDifficulty) // 1.easy 2. medium 3. hard
     {
+
         difficulty = newDifficulty;
+    }
+
+    int minimax(Board board, int depth, bool isMaximizing, char aiSymbol, char humanSymbol) const
+    {
+        // base cases
+        if (board.checkWin(aiSymbol)) // play the best move to win
+        {
+            return 10 - depth; // + 10 - depth (10 is always bigger)
+        }
+        if (board.checkWin(humanSymbol)) // play this move to not lose
+        {
+            return depth - 10; // - depth - 10 (10 is always bigger)
+        }
+        if (board.isFull()) // draw
+        {
+            return 0;
+        }
+
+        int boardSize = board.getSize();
+        if (isMaximizing) // the ai wants to win
+        {
+            int bestScore = -10000;
+            for (int i = 0; i < boardSize; i++)
+            {
+                for (int j = 0; j < boardSize; j++)
+                {
+                    if (board.isValidMove(i, j))
+                    {
+                        board.makeMove(i, j, aiSymbol);                                      // puts a symbol in a place
+                        int score = minimax(board, depth + 1, false, aiSymbol, humanSymbol); // it's the human's turn
+                        //                                    |-> this is why isMaximizing is passed as false
+
+                        // compares between if we put the symbol and if we don't
+                        bestScore = max(bestScore, score); // gets the maximium score
+                        board.makeMove(i, j, ' ');         // deletes the symbol for next iteration
+                    }
+                }
+            }
+            return bestScore;
+        }
+        else // it's the human player first , we should minimize the score
+        {
+            int bestScore = 1000;
+            for (int i = 0; i < boardSize; i++)
+            {
+                for (int j = 0; j < boardSize; j++)
+                {
+                    if (board.isValidMove(i, j))
+                    {
+                        board.makeMove(i, j, aiSymbol);                                     // puts a symbol in a place
+                        int score = minimax(board, depth + 1, true, aiSymbol, humanSymbol); // it's the ai's turn
+                        //                                    |-> this is why isMaximizing is passed as true
+
+                        // compares between if we put the symbol and if we don't
+                        bestScore = min(bestScore, score); // gets the maximium score
+                        board.makeMove(i, j, ' ');         // deletes the symbol for next iteration
+                    }
+                }
+            }
+            return bestScore;
+        }
     }
 
     void getRandomMove(const Board &board, int &row, int &col) const
     {
-        // selects random valid move for easy difficulty
+        vector<pair<int, int>> validMoves;
+        int boardSize = board.getSize();
+
+        for (int i = 0; i < boardSize; i++)
+        {
+            for (int j = 0; j < boardSize; j++) // iterates through the grid
+            {
+                if (board.isValidMove(i, j)) // if the current position is valid
+                {
+                    validMoves.push_back({i, j}); // add it to valid moves
+                }
+            }
+        }
+
+        srand(time(0));                                  // generate random seed
+        int randomPosition = rand() % validMoves.size(); // generate random index for valid moves
+
+        if (!validMoves.empty())
+        {
+            row = validMoves[randomPosition].first;  // selects the index and gets row (first)
+            col = validMoves[randomPosition].second; // selects the index and gets col (second)
+            vector<pair<int, int>> validMoves;
+        }
     }
+
+    // minimax algorithm
 
     void getBestMove(const Board &board, int &row, int &col) const
     {
-        // does the best move : if the player is going to win :
-        // put my symbol in the winning move
-        // if the ai is going to win:
-        // put the symbol in the winning position
+        char aiSymbol = symbol;
+        char humanSymbol = (aiSymbol == 'X') ? 'O' : 'X';
+
+        int bestScore = -1000; // use minimax algorithm
+        int bestRow = -1, bestCol = -1;
+
+        Board tempBoard = board; // create a copy of the board for making a move for simulation
+
+        // simulate all possible moves
+        for (int i = 0; i < board.getSize(); i++)
+        {
+            for (int j = 0; j < board.getSize(); j++)
+            {
+                if (board.isValidMove(i, j))
+                {
+                    tempBoard.makeMove(i, j, aiSymbol); // Make move
+                    int score = minimax(tempBoard, 0, false, aiSymbol, humanSymbol);
+                    tempBoard.makeMove(i, j, ' '); // Undo move
+
+                    if (score > bestScore)
+                    {
+                        bestScore = score;
+                        bestRow = i;
+                        bestCol = j;
+                    }
+                }
+            }
+        }
+
+        row = bestRow;
+        col = bestCol;
     }
 
     void getGoodMove(const Board &board, int &row, int &col) const
     {
         // sometimes plays best moves and sometimes plays random moves for medium difficulty
+
+        // generate random number to decide between best move or random move
+        srand(time(0));
+        int choice = rand() % 100; // generates a number from 0-99
+
+        // 30% chance to play best move
+        if (choice >= 30)
+        {
+            getBestMove(board, row, col);
+        }
+        // 70% chance to play random move
+        else
+        {
+            getRandomMove(board, row, col);
+        }
     }
 
     void getMove(const Board &myBoard, int &row, int &col) override
@@ -203,25 +339,31 @@ private:
 public:
     Game()
     {
-        /*int size;
+        /*
+        int size;
         cout << "What is the size of your grid?" << endl;
         cin >> size;
-        لسة مش عارف هنعمل فيها ايه بس دي ك بداية*/
+        cout << "Player 1 name: " << endl;
+        cout << "Player 1 name: " << endl;
+
+        لسة مش عارف هنعمل فيها ايه بس دي ك بداية
+        */
         myBoard = new Board(); // Allocate memory first!
         myBoard->makeBoard(3); // Then initialize with size 3
         player1 = nullptr;
         player2 = nullptr;
         currentPlayer = 1;
     }
+    void showMenu()
+    {
+        // displayes mode selection menu and handles user choices
+    }
+
     void startGame()
     {
         // Main game entry point
         /* cout << "Player" << currentPlayer << " start!";
         maybe */
-    }
-    void showMenu()
-    {
-        // dispplayes mode selection menu and handles user choices
     }
     void setupPVP()
     {
@@ -278,20 +420,13 @@ public:
         delete player2;
     }
 };
-int testing()
+
+int main() // right now this is for testing
 {
     Board myboard;
     myboard.makeBoard();
     myboard.display();
-    return 0;
-}
-int main()
-{
-    testing();
-    /*
-    // تقريبا
     Game myGame;
     myGame.showMenu();
     return 0;
-    */
 }
