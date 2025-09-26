@@ -146,7 +146,16 @@ public:
     bool isFull() const
     {
         // indicating board full status
-        return false;
+
+        for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++)
+        {
+            if (grid[i][j] == ' ')
+                return false;
+        }
+    }
+    return true;
     }
 
     char getCell(int row, int col) const
@@ -549,6 +558,10 @@ public:
     void reset()
     {
         // prepares game for new round
+        board.reset();
+        currentPlayer = 1;
+        winner = 0;
+
     }
     ~Game()
     {
