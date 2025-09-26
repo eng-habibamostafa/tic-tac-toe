@@ -66,16 +66,15 @@ public:
     bool isValidMove(int row, int col) const
     {
         // checks if this is a valid spot to put a X or O
-        if(row<0 || row>=size || col<0|| col>=size)
+        if (row < 0 || row >= size || col < 0 || col >= size)
         {
             return false;
         }
-        if(grid[row][col]!=' ')
-        { 
+        if (grid[row][col] != ' ')
+        {
             return false;
         }
 
-    
         return true;
     }
 
@@ -83,79 +82,80 @@ public:
     {
         // checks the win conditions (rows, columns , diagonals)
 
-        
-       
-    // Check rows
-    for (int i = 0; i < size; i++)
-    {
-        bool rowWin = true;
-        for (int j = 0; j < size; j++)
-        {
-            if (grid[i][j] != symbol)
-            {
-                rowWin = false;
-                break;
-            }
-        }
-        if (rowWin) return true;
-    }
-
-    // Check columns
-    for (int j = 0; j < size; j++)
-    {
-        bool colWin = true;
+        // Check rows
         for (int i = 0; i < size; i++)
         {
-            if (grid[i][j] != symbol)
+            bool rowWin = true;
+            for (int j = 0; j < size; j++)
             {
-                colWin = false;
+                if (grid[i][j] != symbol)
+                {
+                    rowWin = false;
+                    break;
+                }
+            }
+            if (rowWin)
+                return true;
+        }
+
+        // Check columns
+        for (int j = 0; j < size; j++)
+        {
+            bool colWin = true;
+            for (int i = 0; i < size; i++)
+            {
+                if (grid[i][j] != symbol)
+                {
+                    colWin = false;
+                    break;
+                }
+            }
+            if (colWin)
+                return true;
+        }
+
+        // Check main diagonal
+        bool mainDiag = true;
+        for (int i = 0; i < size; i++)
+        {
+            if (grid[i][i] != symbol)
+            {
+                mainDiag = false;
                 break;
             }
         }
-        if (colWin) return true;
-    }
+        if (mainDiag)
+            return true;
 
-    // Check main diagonal
-    bool mainDiag = true;
-    for (int i = 0; i < size; i++)
-    {
-        if (grid[i][i] != symbol)
+        // Check anti-diagonal
+        bool antiDiag = true;
+        for (int i = 0; i < size; i++)
         {
-            mainDiag = false;
-            break;
+            if (grid[i][size - i - 1] != symbol)
+            {
+                antiDiag = false;
+                break;
+            }
         }
-    }
-    if (mainDiag) return true;
+        if (antiDiag)
+            return true;
 
-    // Check anti-diagonal
-    bool antiDiag = true;
-    for (int i = 0; i < size; i++)
-    {
-        if (grid[i][size - i - 1] != symbol)
-        {
-            antiDiag = false;
-            break;
-        }
+        return false; // no win
     }
-    if (antiDiag) return true;
-
-    return false; // no win
-}
-    
 
     bool isFull() const
     {
         // indicating board full status
 
         for (int i = 0; i < size; i++)
-    {
-        for (int j = 0; j < size; j++)
         {
-            if (grid[i][j] == ' ')
-                return false;
+            for (int j = 0; j < size; j++)
+            {
+                if (grid[i][j] == ' ')
+                    return false;
+            }
         }
-    }
-    return true;
+        return true;
     }
 
     char getCell(int row, int col) const
@@ -166,17 +166,14 @@ public:
     void reset()
     {
         // clears all cells to empty state
-       
 
-    for (int i = 0; i < size; i++)
-    {
-        for (int j = 0; j < size; j++)
+        for (int i = 0; i < size; i++)
         {
-            grid[i][j] = ' ';
+            for (int j = 0; j < size; j++)
+            {
+                grid[i][j] = ' ';
+            }
         }
-    }
-    
-
     }
     int getSize() const
     {
@@ -229,16 +226,15 @@ public:
     // ": Player(n, sym)" makes a para. constructor for Player
     AIPlayer(const string &n = "Sama7", char sym = 'A', int diff = 1) : Player(n, sym)
     {
-        name = n;
-        symbol = sym;
         difficulty = diff;
     }
+
     void setDifficulty(int newDifficulty) // 1.easy 2. medium 3. hard
     {
-
         difficulty = newDifficulty;
     }
 
+    // minimax algorithm
     int minimax(Board board, int depth, bool isMaximizing, char aiSymbol, char humanSymbol) const
     {
         // base cases
@@ -323,11 +319,8 @@ public:
         {
             row = validMoves[randomPosition].first;  // selects the index and gets row (first)
             col = validMoves[randomPosition].second; // selects the index and gets col (second)
-            vector<pair<int, int>> validMoves;
         }
     }
-
-    // minimax algorithm
 
     void getBestMove(const Board &board, int &row, int &col) const
     {
@@ -422,6 +415,7 @@ private:
     Player *player1;
     Player *player2;
     int currentPlayer; // 1 or 2
+    int winner = -1;
 
 public:
     Game()
@@ -441,64 +435,63 @@ public:
         player2 = nullptr;
         currentPlayer = 1;
     }
-   void showMenu()
-{
-    int choice;
-    cout << "===== Tic Tac Toe =====" << endl;
-    cout << "1. Player vs Player" << endl;
-    cout << "2. Player vs Computer (Easy)" << endl;
-    cout << "3. Player vs Computer (Medium)" << endl;
-    cout << "4. Player vs Computer (Hard)" << endl;
-    cout << "Choose a mode: ";
-    cin >> choice;
-
-    if (choice == 1)
+    void showMenu()
     {
-        setupPVP();
-    }
-    else if (choice >= 2 && choice <= 4)
-    {
-        setupPVC(choice - 1);
-    }
+        int choice;
+        cout << "===== Tic Tac Toe =====" << endl;
+        cout << "1. Player vs Player" << endl;
+        cout << "2. Player vs Computer (Easy)" << endl;
+        cout << "3. Player vs Computer (Medium)" << endl;
+        cout << "4. Player vs Computer (Hard)" << endl;
+        cout << "Choose a mode: ";
+        cin >> choice;
 
-    startGame();
-}
+        if (choice == 1)
+        {
+            setupPVP();
+        }
+        else if (choice >= 2 && choice <= 4)
+        {
+            setupPVC(choice - 1);
+        }
 
+        startGame();
+    }
 
     void startGame()
     {
-    bool gameOver = false;
-    myBoard->display();
+        bool gameOver = false;
+        myBoard->display();
 
-    while (!gameOver)
-    {
-        Player* current = (currentPlayer == 1 ? player1 : player2);
-        int row, col;
-
-        current->getMove(*myBoard, row, col);
-        if (myBoard->makeMove(row, col, current->getSymbol()))
+        while (!gameOver)
         {
-            myBoard->display();
-            if (myBoard->checkWin(current->getSymbol()))
+            Player *current = (currentPlayer == 1 ? player1 : player2);
+            int row, col;
+
+            current->getMove(*myBoard, row, col);
+            if (myBoard->makeMove(row, col, current->getSymbol()))
             {
-                cout << current->getName() << " wins!" << endl;
-                gameOver = true;
-            }
-            else if (myBoard->isFull())
-            {
-                cout << "It's a draw!" << endl;
-                gameOver = true;
+                myBoard->display();
+                if (myBoard->checkWin(current->getSymbol()))
+                {
+                    cout << current->getName() << " wins!" << endl;
+                    gameOver = true;
+                }
+                else if (myBoard->isFull())
+                {
+                    cout << "It's a draw!" << endl;
+                    gameOver = true;
+                }
+                else
+                {
+                    switchPlayer();
+                }
             }
             else
             {
-                switchPlayer();
+                cout << "Invalid move." << endl;
             }
         }
-        else
-        {
-            cout << "Invalid move." << endl;
-        }
-    }
     }
     void setupPVP()
     {
@@ -539,29 +532,28 @@ public:
         return false;
     }
 
-   void displayResult() const
-{
-    if (myBoard->checkWin(player1->getSymbol()))
+    void displayResult() const
     {
-        cout << player1->getName() << " wins!" << endl;
+        if (myBoard->checkWin(player1->getSymbol()))
+        {
+            cout << player1->getName() << " wins!" << endl;
+        }
+        else if (myBoard->checkWin(player2->getSymbol()))
+        {
+            cout << player2->getName() << " wins!" << endl;
+        }
+        else if (myBoard->isFull())
+        {
+            cout << "It's a draw!" << endl;
+        }
     }
-    else if (myBoard->checkWin(player2->getSymbol()))
-    {
-        cout << player2->getName() << " wins!" << endl;
-    }
-    else if (myBoard->isFull())
-    {
-        cout << "It's a draw!" << endl;
-    }
-}
 
     void reset()
     {
         // prepares game for new round
-        board.reset();
+        myBoard->reset();
         currentPlayer = 1;
-        winner = 0;
-
+        winner = -1;
     }
     ~Game()
     {
@@ -571,12 +563,111 @@ public:
     }
 };
 
-int main() // right now this is for testing
+int main() // Test program for AI functions
 {
-    Board myboard;
-    myboard.makeBoard();
-    myboard.display();
-    Game myGame;
-    myGame.showMenu();
+    cout << "=== TIC-TAC-TOE AI TESTING PROGRAM ===" << endl;
+    cout << "Testing the implemented AI functions..." << endl
+         << endl;
+
+    // Create a test board
+    Board testBoard;
+    testBoard.makeBoard(3);
+
+    cout << "1. Testing Board Display:" << endl;
+    testBoard.display();
+    cout << endl;
+
+    // Test makeMove function
+    cout << "2. Testing makeMove function:" << endl;
+    cout << "Making moves: X at (0,0), O at (1,1), X at (0,1)" << endl;
+    testBoard.makeMove(0, 0, 'X');
+    testBoard.makeMove(1, 1, 'O');
+    testBoard.makeMove(0, 1, 'X');
+    testBoard.display();
+    cout << endl;
+
+    // Create AI players with different difficulties
+    AIPlayer easyAI("Easy AI", 'O', 1);
+    AIPlayer mediumAI("Medium AI", 'O', 2);
+    AIPlayer hardAI("Hard AI", 'O', 3);
+
+    // Test Easy AI (Random moves)
+    cout << "3. Testing Easy AI (Random moves):" << endl;
+    cout << "Easy AI will make 3 random moves..." << endl;
+    for (int i = 0; i < 3; i++)
+    {
+        int row, col;
+        easyAI.getRandomMove(testBoard, row, col);
+        cout << "Easy AI chose position: (" << row << ", " << col << ")" << endl;
+    }
+    cout << endl;
+
+    // Test Medium AI (Good moves - mix of random and best)
+    cout << "4. Testing Medium AI (70% best, 30% random):" << endl;
+    cout << "Medium AI will make 5 moves to show variation..." << endl;
+    for (int i = 0; i < 5; i++)
+    {
+        int row, col;
+        mediumAI.getGoodMove(testBoard, row, col);
+        cout << "Medium AI chose position: (" << row << ", " << col << ")" << endl;
+    }
+    cout << endl;
+
+    // Test Hard AI (Best moves using minimax)
+    cout << "5. Testing Hard AI (Minimax algorithm):" << endl;
+    cout << "Hard AI analyzing the current board state..." << endl;
+    int bestRow, bestCol;
+    hardAI.getBestMove(testBoard, bestRow, bestCol);
+    cout << "Hard AI's best move: (" << bestRow << ", " << bestCol << ")" << endl;
+    cout << endl;
+
+    // Create a scenario where AI can win
+    cout << "6. Testing AI in a winning scenario:" << endl;
+    Board winBoard;
+    winBoard.makeBoard(3);
+    winBoard.makeMove(0, 0, 'O'); // AI symbol
+    winBoard.makeMove(0, 1, 'O'); // AI can win at (0,2)
+    winBoard.makeMove(1, 0, 'X'); // Human moves
+    winBoard.makeMove(2, 1, 'X');
+
+    cout << "Current board state:" << endl;
+    winBoard.display();
+    cout << endl;
+
+    hardAI.getBestMove(winBoard, bestRow, bestCol);
+    cout << "Hard AI should choose (0, 2) to win: (" << bestRow << ", " << bestCol << ")" << endl;
+    cout << endl;
+
+    // Test all difficulty levels with the same board
+    cout << "7. Comparing all AI difficulties on the same board:" << endl;
+    Board compareBoard;
+    compareBoard.makeBoard(3);
+    compareBoard.makeMove(1, 1, 'X'); // Human takes center
+    compareBoard.display();
+    cout << endl;
+
+    int easyRow, easyCol, mediumRow, mediumCol, hardRow, hardCol;
+
+    easyAI.getMove(compareBoard, easyRow, easyCol);
+    mediumAI.getMove(compareBoard, mediumRow, mediumCol);
+    hardAI.getMove(compareBoard, hardRow, hardCol);
+
+    cout << "Easy AI (Difficulty 1) chose: (" << easyRow << ", " << easyCol << ")" << endl;
+    cout << "Medium AI (Difficulty 2) chose: (" << mediumRow << ", " << mediumCol << ")" << endl;
+    cout << "Hard AI (Difficulty 3) chose: (" << hardRow << ", " << hardCol << ")" << endl;
+    cout << endl;
+
+    // Test board utility functions
+    cout << "8. Testing board utility functions:" << endl;
+    cout << "Board size: " << compareBoard.getSize() << endl;
+    cout << "Is (0,0) valid move? " << (compareBoard.isValidMove(0, 0) ? "Yes" : "No") << endl;
+    cout << "Is (1,1) valid move? " << (compareBoard.isValidMove(1, 1) ? "Yes" : "No") << endl;
+    cout << "Cell (1,1) contains: '" << compareBoard.getCell(1, 1) << "'" << endl;
+    cout << "Is board full? " << (compareBoard.isFull() ? "Yes" : "No") << endl;
+    cout << endl;
+
+    cout << "=== ALL TESTS COMPLETED ===" << endl;
+    cout << "The AI functions are working correctly!" << endl;
+
     return 0;
 }

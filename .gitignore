@@ -4,4 +4,4 @@ obj/
 *.depend
 *.layout
 *.exe
-*.o
+.vscode/
