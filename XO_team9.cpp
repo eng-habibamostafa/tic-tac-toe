@@ -142,16 +142,15 @@ public:
     // ": Player(n, sym)" makes a para. constructor for Player
     AIPlayer(const string &n = "Sama7", char sym = 'A', int diff = 1) : Player(n, sym)
     {
-        name = n;
-        symbol = sym;
         difficulty = diff;
     }
+
     void setDifficulty(int newDifficulty) // 1.easy 2. medium 3. hard
     {
-
         difficulty = newDifficulty;
     }
 
+    // minimax algorithm
     int minimax(Board board, int depth, bool isMaximizing, char aiSymbol, char humanSymbol) const
     {
         // base cases
@@ -236,11 +235,8 @@ public:
         {
             row = validMoves[randomPosition].first;  // selects the index and gets row (first)
             col = validMoves[randomPosition].second; // selects the index and gets col (second)
-            vector<pair<int, int>> validMoves;
         }
     }
-
-    // minimax algorithm
 
     void getBestMove(const Board &board, int &row, int &col) const
     {
