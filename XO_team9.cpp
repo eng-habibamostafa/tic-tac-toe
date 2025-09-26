@@ -152,6 +152,20 @@ public:
     }
 };
 
+class HumanPlayer : public Player{
+private:
+    string name;
+    char symbol;
+
+public:
+    HumanPlayer(const string &n, char s) : Player(n, s){
+        name = n;
+        symbol = s;
+    }
+
+    void getMove(const Board &myBoard, int &row, int &col) override {}
+};
+
 class AIPlayer : public Player
 {
 private:
@@ -372,7 +386,7 @@ public:
         currentPlayer = 1;
     }
    void showMenu()
-{
+    {
     int choice;
     cout << "===== Tic Tac Toe =====" << endl;
     cout << "1. Player vs Player" << endl;
@@ -392,7 +406,7 @@ public:
     }
 
     startGame();
-}
+    }
 
 
     void startGame()
@@ -433,11 +447,28 @@ public:
     void setupPVP()
     {
         // configures player vs player mode with user input
+        string name1;
+        cout << "Enter Player 1 Name: " << endl;
+        getline(cin, name1);
+        player1 = new HumanPlayer(name1, 'X');
+
+        string name2;
+        cout << "Enter Player 2 Name: " << endl;
+        getline(cin, name2);
+        player2 = new HumanPlayer(name2, 'O');   
     }
+
     void setupPVC(int difficulty)
     {
         // configures player vs computer mode with user input
+        string name1;
+        cout << "Enter Player 1 Name: " << endl;
+        getline(cin, name1);
+        player1 = new HumanPlayer(name1, 'X');
+
+        player2 = new AIPlayer("Intelligence", 'O', difficulty);
     }
+
     void switchPlayer()
     {
         // alternates current player between players
